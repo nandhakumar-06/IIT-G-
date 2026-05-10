@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Counselor Panel - {{ app_name }}{% endblock %}
-{% block page_title %}Counselor Panel{% endblock %}
+{% block page_title %}Counselor{% endblock %}
 
 {% block content %}
 
@@ -79,7 +79,7 @@
         {% set total = t.student_count or 0 %}
         <tr>
           <td><strong>{{ t.test_name or 'Test #' ~ t.id }}</strong></td>
-          <td>{{ t.year_level or (user.year_level or 1) }}</td>
+          <td>{{ format_year_level(t.year_level or (user.year_level or 1)) }}</td>
           <td>{{ t.batch_name or '—' }}</td>
           <td>{{ t.semester or '—' }}</td>
           <td>{{ total }}</td>
@@ -145,7 +145,7 @@
           {% set total = t.student_count or 0 %}
           <tr>
             <td><strong>{{ t.test_name or 'Test #' ~ t.id }}</strong></td>
-            <td>{{ t.year_level or (user.year_level or 1) }}</td>
+            <td>{{ format_year_level(t.year_level or (user.year_level or 1)) }}</td>
             <td>{{ t.batch_name or '—' }}</td>
             <td>{{ t.semester or '—' }}</td>
             <td>{{ total }}</td>
@@ -199,7 +199,7 @@
         {% set total = t.student_count or 0 %}
         <tr>
           <td><strong>{{ t.test_name or 'Test #' ~ t.id }}</strong></td>
-          <td>{{ t.year_level or (user.year_level or 1) }}</td>
+          <td>{{ format_year_level(t.year_level or (user.year_level or 1)) }}</td>
           <td>{{ t.batch_name or '—' }}</td>
           <td>{{ t.semester or '—' }}</td>
           <td>{{ total }}</td>

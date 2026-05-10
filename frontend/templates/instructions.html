@@ -24,7 +24,7 @@
   <ul style="padding-left:18px;line-height:1.9;color:var(--text);">
     <li>Use Reports to select Department, then Year, then manage Semester test data.</li>
     <li>Use Counsellor Activity to track completion and export filtered PDF summaries.</li>
-    <li>Use Users to create and maintain Counselor, HOD, DEO and Principal accounts.</li>
+    <li>Use Users to create and maintain Counselor, HoD, DEO and Principal accounts.</li>
     <li>Use Database tab for backup, restore and controlled data clear operations.</li>
     <li>Use Session Monitoring and Message Logs for audit and operations visibility.</li>
   </ul>
@@ -41,13 +41,13 @@
 </div>
 {% elif role_key in ['hod', 'chief_admin'] %}
 <div class="card mb-3">
-  <div class="card-title"><i class="fas fa-building"></i> HOD Workflow</div>
+  <div class="card-title"><i class="fas fa-building"></i> HoD Workflow</div>
   <ul style="padding-left:18px;line-height:1.9;color:var(--text);">
     <li>Your panel is scoped to assigned Department and Year only.</li>
     <li>Use Reports to review semester tests and counselor progress in your scope.</li>
     <li>Use Counsellor Activity to inspect pending/complete counselors by test.</li>
     <li>Use Message Logs for communication audit under your scope.</li>
-    <li>HOD does not upload marksheets; uploads are handled by System Admin or DEO.</li>
+    <li>HoD does not upload marksheets; uploads are handled by System Admin or DEO.</li>
   </ul>
 </div>
 {% elif role_key == 'deo' %}

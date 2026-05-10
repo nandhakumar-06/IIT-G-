@@ -527,10 +527,11 @@ function updateChiefYearOptions(contextKey = 'create') {
 
   let html = '';
   for (let yr = 1; yr <= 4; yr++) {
+    const suffix = ({ 1: 'st', 2: 'nd', 3: 'rd' })[yr] || 'th';
     html += `
       <label style="display:flex;align-items:center;gap:6px;font-size:.84rem;">
         <input type="checkbox" id="chiefYear${yr}-${contextKey}" value="${yr}">
-        Year ${yr}
+        ${yr}${suffix} Year
       </label>
     `;
   }

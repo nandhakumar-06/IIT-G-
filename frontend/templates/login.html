@@ -69,7 +69,7 @@
     <div class="form-group">
       <label class="form-label" for="identifier">Email or Name</label>
       <input type="text" class="form-control" id="identifier" name="identifier"
-             placeholder="Enter your email or name" required autofocus autocomplete="username">
+             placeholder="Enter your email or name" required autofocus autocomplete="username" value="{{ login_identifier|default('')|e }}">
       <small style="color:var(--text-dim);font-size:.75rem;margin-top:4px;display:block;">
         You can login using your email address or full name
       </small>

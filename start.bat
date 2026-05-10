@@ -1,28 +1,6 @@
 @echo off
-setlocal EnableExtensions EnableDelayedExpansion
 title RMKCET Parent Connect
 color 0A
-
-cd /d "%~dp0"
-
-set "AUTORUN=false"
-if /I "%~1"=="--autorun" set "AUTORUN=true"
-
-set "CONFIG_FILE=%CD%\config.ini"
-if not exist "%CONFIG_FILE%" (
-    >"%CONFIG_FILE%" echo [launcher]
-    >>"%CONFIG_FILE%" echo shell_startup_enabled = false
-)
-
-call :read_config
-if /I "%SHELL_STARTUP_ENABLED%"=="true" call :ensure_windows_startup_task
-
-set "RUNTIME_ROOT=%CD%\.runtime"
-set "EMBED_VERSION=3.11.9"
-set "PY_HOME=%RUNTIME_ROOT%\python-embed"
-set "PY_EXE=%PY_HOME%\python.exe"
-set "LOCAL_PY_EXE="
-
 echo.
 echo  ============================================
 echo   RMKCET Parent Connect
@@ -30,171 +8,92 @@ echo   Starting server...
 echo  ============================================
 echo.
 
-call :resolve_python
-if not defined LOCAL_PY_EXE (
-    call :ensure_embedded_python
-    if errorlevel 1 goto :startup_failed
-) else (
-    set "PY_EXE=%LOCAL_PY_EXE%"
+:: Move to the folder where this .bat lives
+cd /d "%~dp0"
+
+:: Check if Python is installed
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo  [ERROR] Python is not installed or not in PATH!
+    echo  Please install Python 3.8 or later from https://python.org
+    echo  Make sure to check "Add Python to PATH" during installation.
+    pause
+    exit /b 1
 )
 
-call :ensure_dependencies
-if errorlevel 1 goto :startup_failed
+:: Define virtual environment paths
+set "VENV_DIR="
+set "PY_EXE="
+set "PIP_EXE="
 
+:: Check for existing virtual environment
+if exist "venv\Scripts\python.exe" (
+    set "VENV_DIR=venv"
+    set "PY_EXE=venv\Scripts\python.exe"
+    set "PIP_EXE=venv\Scripts\pip.exe"
+    echo  [INFO] Found existing virtual environment: venv
+) else if exist ".venv\Scripts\python.exe" (
+    set "VENV_DIR=.venv"
+    set "PY_EXE=.venv\Scripts\python.exe"
+    set "PIP_EXE=.venv\Scripts\pip.exe"
+    echo  [INFO] Found existing virtual environment: .venv
+)
+
+:: If no virtual environment exists, create one
+if "%PY_EXE%"=="" (
+    echo  [INFO] Virtual environment not found. Creating one...
+    echo  Creating venv...
+    python -m venv venv
+    if errorlevel 1 (
+        echo  [ERROR] Failed to create virtual environment!
+        pause
+        exit /b 1
+    )
+    set "VENV_DIR=venv"
+    set "PY_EXE=venv\Scripts\python.exe"
+    set "PIP_EXE=venv\Scripts\pip.exe"
+    echo  [SUCCESS] Virtual environment created successfully!
+)
+
+:: Kill any old process on port 5000
 echo  [INFO] Checking for existing processes on port 5000...
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000" ^| findstr "LISTENING"') do (
     echo  [INFO] Killing process with PID: %%a
     taskkill /F /PID %%a >nul 2>&1
 )
 
+:: Install dependencies if requirements.txt exists
+if exist "backend\requirements.txt" (
+    echo  [INFO] Checking/Installing dependencies...
+    "%PY_EXE%" -c "import flask" 2>nul
+    if errorlevel 1 (
+        echo  [INFO] Installing dependencies from requirements.txt...
+        "%PIP_EXE%" install -r backend\requirements.txt
+        if errorlevel 1 (
+            echo  [ERROR] Failed to install dependencies!
+            pause
+            exit /b 1
+        )
+        echo  [SUCCESS] Dependencies installed successfully!
+    ) else (
+        echo  [INFO] Dependencies already installed.
+    )
+) else (
+    echo  [WARNING] backend\requirements.txt not found. Skipping dependency installation.
+)
+
+:: Start server
 echo.
 echo  ============================================
 echo   Server starting...
-echo   URL: http://localhost:5000
+echo   Opening http://localhost:5000 in your browser...
 echo   Press Ctrl+C to stop the server.
 echo  ============================================
 echo.
-
-if /I not "%AUTORUN%"=="true" start "" http://localhost:5000
+start "" http://localhost:5000
 "%PY_EXE%" backend\app.py
 
+:: If the server stops, wait for user input before closing
 echo.
 echo  Server has stopped.
-if /I not "%AUTORUN%"=="true" pause
-exit /b 0
-
-:startup_failed
-echo.
-echo  [ERROR] Launcher failed.
-if /I not "%AUTORUN%"=="true" pause
-exit /b 1
-
-:resolve_python
-if exist "%CD%\venv\Scripts\python.exe" (
-    set "LOCAL_PY_EXE=%CD%\venv\Scripts\python.exe"
-    echo  [INFO] Using virtual environment: venv
-    exit /b 0
-)
-
-if exist "%CD%\.venv\Scripts\python.exe" (
-    set "LOCAL_PY_EXE=%CD%\.venv\Scripts\python.exe"
-    echo  [INFO] Using virtual environment: .venv
-    exit /b 0
-)
-
-where python >nul 2>&1
-if not errorlevel 1 (
-    set "LOCAL_PY_EXE=python"
-    echo  [INFO] Using system Python from PATH.
-    exit /b 0
-)
-
-echo  [INFO] No local Python interpreter found. Falling back to embedded runtime.
-exit /b 0
-
-:read_config
-set "SHELL_STARTUP_ENABLED=false"
-for /f "usebackq tokens=1,* delims==" %%A in (`findstr /I /R "^shell_startup_enabled[ ]*=" "%CONFIG_FILE%"`) do (
-    set "_val=%%B"
-    set "_val=!_val: =!"
-    if /I "!_val!"=="true" set "SHELL_STARTUP_ENABLED=true"
-)
-exit /b 0
-
-:ensure_windows_startup_task
-set "TASK_NAME=RMKCET_ParentConnect_Autostart"
-set "TASK_CMD=\"%CD%\start.bat\" --autorun"
-
-schtasks /Query /TN "%TASK_NAME%" >nul 2>&1
-if errorlevel 1 (
-    echo  [INFO] shell_startup_enabled=true, creating startup task...
-    schtasks /Create /F /TN "%TASK_NAME%" /SC ONSTART /RU SYSTEM /TR "%TASK_CMD%" >nul 2>&1
-    if errorlevel 1 (
-        schtasks /Create /F /TN "%TASK_NAME%" /SC ONLOGON /TR "%TASK_CMD%" >nul 2>&1
-        if errorlevel 1 (
-            echo  [WARNING] Could not create startup task automatically.
-            echo  [WARNING] Run this script as Administrator once if needed.
-        ) else (
-            echo  [SUCCESS] Startup task created (ONLOGON fallback): %TASK_NAME%
-        )
-    ) else (
-        echo  [SUCCESS] Startup task created (ONSTART): %TASK_NAME%
-    )
-)
-exit /b 0
-
-:ensure_embedded_python
-if exist "%PY_EXE%" (
-    echo  [INFO] Using embedded Python runtime: %PY_EXE%
-    exit /b 0
-)
-
-echo  [INFO] Embedded Python not found. Downloading Python %EMBED_VERSION% embeddable package...
-if not exist "%RUNTIME_ROOT%" mkdir "%RUNTIME_ROOT%"
-
-set "EMBED_ZIP=%RUNTIME_ROOT%\python-embed.zip"
-set "GET_PIP_FILE=%RUNTIME_ROOT%\get-pip.py"
-set "EMBED_URL=https://www.python.org/ftp/python/%EMBED_VERSION%/python-%EMBED_VERSION%-embed-amd64.zip"
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing -Uri '%EMBED_URL%' -OutFile '%EMBED_ZIP%'" >nul
-if errorlevel 1 (
-    echo  [ERROR] Failed to download embedded Python package.
-    exit /b 1
-)
-
-if exist "%PY_HOME%" rmdir /s /q "%PY_HOME%"
-mkdir "%PY_HOME%"
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '%EMBED_ZIP%' -DestinationPath '%PY_HOME%' -Force" >nul
-if errorlevel 1 (
-    echo  [ERROR] Failed to extract embedded Python package.
-    exit /b 1
-)
-del /q "%EMBED_ZIP%" >nul 2>&1
-
-if not exist "%PY_HOME%\Lib\site-packages" mkdir "%PY_HOME%\Lib\site-packages"
-if exist "%PY_HOME%\python311._pth" (
-    >"%PY_HOME%\python311._pth" echo python311.zip
-    >>"%PY_HOME%\python311._pth" echo .
-    >>"%PY_HOME%\python311._pth" echo Lib
-    >>"%PY_HOME%\python311._pth" echo Lib\site-packages
-    >>"%PY_HOME%\python311._pth" echo import site
-)
-
-echo  [INFO] Installing pip into embedded Python runtime...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile '%GET_PIP_FILE%'" >nul
-if errorlevel 1 (
-    echo  [ERROR] Failed to download get-pip.py.
-    exit /b 1
-)
-
-"%PY_EXE%" "%GET_PIP_FILE%" --disable-pip-version-check --no-warn-script-location >nul
-if errorlevel 1 (
-    echo  [ERROR] Failed to install pip in embedded runtime.
-    exit /b 1
-)
-del /q "%GET_PIP_FILE%" >nul 2>&1
-
-echo  [SUCCESS] Embedded Python runtime is ready.
-exit /b 0
-
-:ensure_dependencies
-if not exist "backend\requirements.txt" (
-    echo  [WARNING] backend\requirements.txt not found. Skipping dependency installation.
-    exit /b 0
-)
-
-"%PY_EXE%" -c "import flask, pandas, openpyxl" >nul 2>&1
-if errorlevel 1 (
-    echo  [INFO] Installing dependencies from backend\requirements.txt...
-    "%PY_EXE%" -m pip install --disable-pip-version-check --no-warn-script-location --upgrade pip >nul
-    "%PY_EXE%" -m pip install --disable-pip-version-check --no-warn-script-location -r backend\requirements.txt
-    if errorlevel 1 (
-        echo  [ERROR] Failed to install dependencies.
-        exit /b 1
-    )
-    echo  [SUCCESS] Dependencies installed.
-) else (
-    echo  [INFO] Dependencies already installed.
-)
-exit /b 0
+pause

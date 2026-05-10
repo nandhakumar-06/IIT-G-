@@ -4,15 +4,15 @@
 {% set header_tab = request.args.get('tab', default_tab or 'reports') %}
 {% set role_name = ((current_role_override or current_role or ''))|lower %}
 {% if role_name == 'admin' %}
-{% set panel_label = 'Admin Panel' %}
+{% set panel_label = 'Admin' %}
 {% elif role_name == 'principal' %}
-{% set panel_label = 'Principal Panel' %}
+{% set panel_label = 'Principal' %}
 {% elif role_name in ['hod', 'chief_admin'] %}
-{% set panel_label = 'HOD Panel' %}
+{% set panel_label = 'HoD' %}
 {% elif role_name == 'deo' %}
-{% set panel_label = 'DEO Panel' %}
+{% set panel_label = 'DEO' %}
 {% else %}
-{% set panel_label = 'Admin Panel' %}
+{% set panel_label = 'Admin' %}
 {% endif %}
 
 {% if is_system_admin or is_principal or is_chief_admin or is_deo %}
@@ -150,7 +150,7 @@
           <select class="form-control" name="role" id="createUserRole" onchange="toggleCreateUserFields()">
             <option value="counselor">Counselor</option>
             {% if is_system_admin %}
-            <option value="hod">HOD</option>
+            <option value="hod">HoD</option>
             {% endif %}
             {% if is_system_admin or is_chief_admin %}
             <option value="deo">DEO</option>
@@ -165,7 +165,7 @@
       <div class="form-group" id="createUserChiefScopeWrap" style="display:none;"></div>
       <div class="form-row" id="createUserCounselorRow">
         <div class="form-group">
-          <label class="form-label">Department (Counselor/HOD/DEO)</label>
+          <label class="form-label">Department (Counselor/HoD/DEO)</label>
           <select class="form-control" name="department" id="createUserDepartment">
             <option value="">-- Select --</option>
             {% for d in departments %}
@@ -176,7 +176,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Year (Counselor/HOD/DEO)</label>
+          <label class="form-label">Year (Counselor/HoD/DEO)</label>
           <select class="form-control" name="year_level" id="createUserYearLevel">
             <option value="1" selected>1st Year</option>
             <option value="2">2nd Year</option>
@@ -186,7 +186,7 @@
         </div>
       </div>
       <div class="card mb-2" id="createUserScopeCard" style="display:none;padding:12px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.28);">
-        <div class="card-title" style="font-size:.86rem;margin-bottom:10px;"><i class="fas fa-layer-group"></i> Assigned Scopes (HOD/DEO)</div>
+        <div class="card-title" style="font-size:.86rem;margin-bottom:10px;"><i class="fas fa-layer-group"></i> Assigned Scopes (HoD/DEO)</div>
         <div class="scope-grid">
           {% for d in departments if d.is_active %}
           <div class="scope-item">
@@ -202,7 +202,7 @@
           </div>
           {% endfor %}
         </div>
-        <small style="font-size:.74rem;color:var(--text-dim);">Choose one or more department-year scopes for HOD/DEO.</small>
+        <small style="font-size:.74rem;color:var(--text-dim);">Choose one or more department-year scopes for HoD/DEO.</small>
       </div>
       <div class="form-row" id="createUserCounselorCapacityRow">
         <div class="form-group">
@@ -263,7 +263,7 @@
         <option value="">All Account Types</option>
         {% if not is_deo %}
         <option value="admin">System Admin</option>
-        <option value="hod">HOD</option>
+        <option value="hod">HoD</option>
         <option value="deo">DEO</option>
         <option value="principal">Principal</option>
         {% endif %}
@@ -331,7 +331,7 @@
           </td>
           <td>
             <span class="badge {% if u.role == 'admin' %}badge-role-admin{% elif u.role in ['chief_admin','hod'] %}badge-role-chief{% elif u.role == 'principal' %}badge-role-admin{% else %}badge-role-counselor{% endif %}">
-              {% if u.role == 'admin' %}System Admin{% elif u.role in ['chief_admin','hod'] %}HOD{% elif u.role == 'principal' %}Principal{% elif u.role == 'deo' %}DEO{% else %}Counselor{% endif %}
+              {% if u.role == 'admin' %}System Admin{% elif u.role in ['chief_admin','hod'] %}HoD{% elif u.role == 'principal' %}Principal{% elif u.role == 'deo' %}DEO{% else %}Counselor{% endif %}
             </span>
           </td>
           <td>
@@ -407,7 +407,7 @@
           {% if is_chief_admin %}
           <div class="card mb-2" style="padding:10px 12px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.35);">
             <div style="font-size:.82rem;color:var(--text);">
-              <strong>Edit User Account Details</strong>: You can edit counselors, DEOs, and HOD users in your assigned department/year scope.
+              <strong>Edit User Account Details</strong>: You can edit counselors, DEOs, and HoD users in your assigned department/year scope.
               Student records are managed separately using <strong>Manage Students</strong>.
             </div>
           </div>
@@ -426,7 +426,7 @@
               <label class="form-label">Role</label>
               <select class="form-control" name="role" id="editRole-{{ loop.index }}" data-edit-role="{{ loop.index }}" onchange="toggleEditUserFields('{{ loop.index }}')">
                 <option value="counselor" {% if (u.role or 'counselor') == 'counselor' %}selected{% endif %}>Counselor</option>
-                <option value="hod" {% if u.role in ['chief_admin','hod'] %}selected{% endif %}>HOD</option>
+                <option value="hod" {% if u.role in ['chief_admin','hod'] %}selected{% endif %}>HoD</option>
                 <option value="deo" {% if u.role == 'deo' %}selected{% endif %}>DEO</option>
                 <option value="principal" {% if u.role == 'principal' %}selected{% endif %}>Principal</option>
                 <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>System Admin</option>
@@ -455,7 +455,7 @@
             </div>
           </div>
           <div class="card mb-2" id="editScopeCard-{{ loop.index }}" style="display:none;padding:12px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.28);">
-            <div class="card-title" style="font-size:.84rem;margin-bottom:10px;"><i class="fas fa-layer-group"></i> Assigned Scopes (HOD/DEO)</div>
+            <div class="card-title" style="font-size:.84rem;margin-bottom:10px;"><i class="fas fa-layer-group"></i> Assigned Scopes (HoD/DEO)</div>
             <div class="scope-grid">
               {% for d in departments if d.is_active %}
               <div class="scope-item">
@@ -761,6 +761,13 @@
           <td>
             <div class="btn-group">
               {% if is_system_admin %}
+              <form method="POST" action="{{ url_for('api_update_department', dept_id=d.id) }}" id="deptEditForm-{{ d.id }}" style="display:inline">
+                <input type="hidden" name="code" value="{{ d.code }}">
+                <input type="hidden" name="name" value="{{ d.name }}">
+                <button type="button" class="btn btn-outline btn-sm" onclick='openDepartmentEdit({{ d.id }}, {{ (d.code or "")|tojson }}, {{ (d.name or "")|tojson }})'>
+                  <i class="fas fa-pen"></i> Edit
+                </button>
+              </form>
               <form method="POST" action="{{ url_for('api_toggle_department', dept_id=d.id) }}" style="display:inline">
                 <input type="hidden" name="is_active" value="{{ d.is_active }}">
                 <button class="btn btn-outline btn-sm">
@@ -801,7 +808,7 @@
     <div class="card-title"><i class="fas fa-building"></i> Department: {{ report_department }}</div>
     <div style="display:grid;grid-template-columns:1fr;gap:10px;max-width:520px;">
       {% for y in report_available_years %}
-      <a class="btn btn-outline" style="padding:16px;font-size:1rem;justify-content:flex-start;" href="{{ url_for(panel_endpoint, tab='reports', report_dept=report_department, report_year=y) }}"><strong>{{ loop.index }}.</strong>&nbsp; Year {{ y }}</a>
+      <a class="btn btn-outline" style="padding:16px;font-size:1rem;justify-content:flex-start;" href="{{ url_for(panel_endpoint, tab='reports', report_dept=report_department, report_year=y) }}"><strong>{{ loop.index }}.</strong>&nbsp; {{ format_year_level(y) }}</a>
       {% endfor %}
       {% if not report_available_years %}
       <div class="card" style="padding:12px;font-size:.86rem;color:var(--text-dim);">No years allocated for this department.</div>
@@ -821,7 +828,8 @@
         </div>
         <div class="form-group">
           <label class="form-label">Year</label>
-          <input class="form-control" name="year_level" value="{{ report_year_level }}" readonly>
+          <input type="hidden" name="year_level" value="{{ report_year_level }}">
+          <input class="form-control" value="{{ format_year_level(report_year_level) }}" readonly>
         </div>
       </div>
       <div class="form-row">
@@ -878,7 +886,7 @@
   {% set sem2_tests = sem_ns.sem2_tests %}
 
   <div class="card mb-3">
-    <div class="card-title"><i class="fas fa-database"></i> {{ report_department }} - Year {{ report_year_level }} - Semester 1</div>
+    <div class="card-title"><i class="fas fa-database"></i> {{ report_department }} - {{ format_year_level(report_year_level) }} - Semester 1</div>
     <div class="table-wrapper">
     <table>
       <thead>
@@ -938,7 +946,7 @@
   </div>
 
   <div class="card mb-3">
-    <div class="card-title"><i class="fas fa-database"></i> {{ report_department }} - Year {{ report_year_level }} - Semester 2</div>
+    <div class="card-title"><i class="fas fa-database"></i> {{ report_department }} - {{ format_year_level(report_year_level) }} - Semester 2</div>
     <div class="table-wrapper">
       <table>
         <thead>
@@ -1011,7 +1019,7 @@
     <div class="test-details">
       <p><strong>Batch:</strong> {{ t.batch_name or 'N/A' }}</p>
       <p><strong>Semester:</strong> {{ t.semester or 'N/A' }}</p>
-      <p><strong>Year:</strong> {{ t.year_level or report_year_level }}</p>
+      <p><strong>Year:</strong> {{ format_year_level(t.year_level or report_year_level) }}</p>
       <p><strong>Department:</strong> {{ t.department or report_department or 'N/A' }}</p>
       <p><strong>Uploaded By:</strong> {{ t.uploaded_by_name or t.uploaded_by or 'Unknown' }}</p>
       <p><strong>Uploaded At:</strong> {{ (t.uploaded_at or 'N/A')[:19] }}</p>
@@ -1053,7 +1061,7 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Year</label>
-          <input class="form-control" value="{{ t.year_level or report_year_level }}" readonly>
+          <input class="form-control" value="{{ format_year_level(t.year_level or report_year_level) }}" readonly>
         </div>
         <div class="form-group">
           <label class="form-label">Batch</label>
@@ -1078,7 +1086,8 @@
 
 <!-- ==================== DASHBOARD TAB ==================== -->
 <div class="tab-panel {% if current_tab == 'dashboard' %}active{% endif %}" id="tab-dashboard">
-  {% set dash_title = 'Principal Dashboard' if is_principal else 'HOD Dashboard' %}
+  {% set dash_title = 'Principal Dashboard' if is_principal else 'HoD Dashboard' %}
+  {% set is_hod_or_principal_dashboard = is_principal or is_chief_admin %}
   {% set dash_completion = dashboard_data.get('completion_overview', {}) if dashboard_data else {} %}
   {% set overall_completion_pct = dash_completion.get('overall', 0) %}
   <h3 class="section-title"><i class="fas fa-gauge"></i> {{ dash_title }}</h3>
@@ -1103,6 +1112,18 @@
 
   <div class="card mb-3" id="adminDashboardData" data-dashboard='{{ (dashboard_data or {})|tojson|forceescape }}' style="display:none;"></div>
 
+  {% if is_hod_or_principal_dashboard %}
+  <div class="mb-3" style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;">
+    <div class="card" style="padding:14px;flex:1 1 520px;">
+      <div class="card-title"><i class="fas fa-building"></i> Counsellor Completion status per department</div>
+      <canvas id="departmentCompletionChart" height="120"></canvas>
+    </div>
+    <div class="card" style="padding:12px;flex:0 0 300px;">
+      <div class="card-title" style="font-size:.9rem;"><i class="fas fa-circle-nodes"></i> Overall Completion Split</div>
+      <canvas id="overallCompletionChart" height="78"></canvas>
+    </div>
+  </div>
+  {% else %}
   <div class="form-row mb-3">
     <div class="card" style="padding:14px;">
       <div class="card-title"><i class="fas fa-building"></i> Department Completion %</div>
@@ -1123,13 +1144,14 @@
     <div class="card-title"><i class="fas fa-table-cells-large"></i> Semester-Test Adjusted Performance Matrix</div>
     <canvas id="testMatrixChart" height="110"></canvas>
   </div>
+  {% endif %}
 
-  <div class="card">
+  <div class="card {% if is_hod_or_principal_dashboard %}mb-3{% endif %}">
     <div class="card-title"><i class="fas fa-trophy"></i> Top Counselors (Completion)</div>
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr><th>Name</th><th>Department</th><th>Students</th><th>Reached</th><th>Week Messages</th></tr>
+          <tr><th>Name</th><th>Department</th><th>Students</th><th>Reached</th><th>Time Score</th></tr>
         </thead>
         <tbody>
           {% for a in leaderboard %}
@@ -1138,7 +1160,7 @@
             <td>{{ a.department }}</td>
             <td>{{ a.student_count }}</td>
             <td>{{ a.unique_students_messaged }}</td>
-            <td>{{ a.week_messages }}</td>
+            <td>{{ a.time_score_display or '--' }}</td>
           </tr>
           {% endfor %}
           {% if not leaderboard %}
@@ -1149,10 +1171,12 @@
     </div>
   </div>
 
+  {% if not is_hod_or_principal_dashboard %}
   <div class="card" style="padding:12px;max-width:300px;margin:14px auto 0;">
     <div class="card-title" style="font-size:.9rem;"><i class="fas fa-circle-nodes"></i> Overall Completion Split</div>
     <canvas id="overallCompletionChart" height="78"></canvas>
   </div>
+  {% endif %}
 </div>
 
 <!-- ==================== DATABASE TAB ==================== -->
@@ -1255,7 +1279,7 @@
     <div class="card-title"><i class="fas fa-building"></i> Department: {{ act_department }}</div>
     <div style="display:grid;grid-template-columns:1fr;gap:10px;">
       {% for y in activity_available_years %}
-      <a class="btn btn-outline" style="padding:16px;font-size:1rem;justify-content:flex-start;" href="{{ url_for(panel_endpoint, tab='activity', act_dept=act_department, act_year=y) }}"><strong>{{ loop.index }}.</strong>&nbsp; Year {{ y }}</a>
+      <a class="btn btn-outline" style="padding:16px;font-size:1rem;justify-content:flex-start;" href="{{ url_for(panel_endpoint, tab='activity', act_dept=act_department, act_year=y) }}"><strong>{{ loop.index }}.</strong>&nbsp; {{ format_year_level(y) }}</a>
       {% endfor %}
       {% if not activity_available_years %}
       <div class="card" style="padding:12px;font-size:.86rem;color:var(--text-dim);">No years allocated for this department.</div>
@@ -1264,7 +1288,7 @@
   </div>
   {% elif activity_show_semester %}
   <div class="card mb-3">
-    <div class="card-title"><i class="fas fa-list-check"></i> {{ act_department }} - Year {{ act_year_level }} Test Upload Status</div>
+    <div class="card-title"><i class="fas fa-list-check"></i> {{ act_department }} - {{ format_year_level(act_year_level) }} Test Upload Status</div>
     <div class="form-row">
       {% for sem in ['1', '2'] %}
       <div class="card" style="padding:14px;">
@@ -1317,7 +1341,7 @@
         <tr class="activity-row" data-counselor-name="{{ (a.name or '')|lower }}" data-counselor-email="{{ (a.email or '')|lower }}" data-status="{{ (a.work_status or '')|lower }}" data-completion="{{ a.completion_pct or 0 }}">
           <td><strong>{{ a.name }}</strong><br><span style="font-size:.75rem;color:var(--text-dim)">{{ a.email }}</span></td>
           <td>{{ a.department }}</td>
-          <td>{{ a.year_level }}</td>
+          <td>{{ format_year_level(a.year_level) }}</td>
           <td>{{ a.student_count }}</td>
           <td>{{ a.unique_students_messaged }}</td>
           <td>{{ a.pending_count }}</td>
@@ -1461,7 +1485,7 @@
     <div class="btn-group" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
       <a class="btn btn-outline" href="{{ url_for('admin_test_mode_preview', preview_role='principal') }}"><i class="fas fa-user-tie"></i> Principal Preview</a>
       <a class="btn btn-outline" href="{{ url_for('admin_test_mode_preview', preview_role='deo') }}"><i class="fas fa-user-gear"></i> DEO Preview</a>
-      <a class="btn btn-outline" href="{{ url_for('admin_test_mode_preview', preview_role='hod') }}"><i class="fas fa-user-shield"></i> HOD Preview</a>
+      <a class="btn btn-outline" href="{{ url_for('admin_test_mode_preview', preview_role='hod') }}"><i class="fas fa-user-shield"></i> HoD Preview</a>
       <a class="btn btn-outline" href="{{ url_for('admin_test_mode_preview', preview_role='counselor') }}"><i class="fas fa-user-graduate"></i> Counselor Preview</a>
     </div>
     {% if preview_mode %}
@@ -1542,7 +1566,7 @@
     <div class="card mb-3" id="tutorialSettingsCard">
       <div class="card-title"><i class="fas fa-person-chalkboard"></i> Guided Tutorial Settings</div>
       <p style="font-size:.84rem;color:var(--text-dim);margin-bottom:12px;">
-        Control first-login tutorial walkthroughs for DEO, HOD, Principal and Counselor roles.
+        Control first-login tutorial walkthroughs for DEO, HoD, Principal and Counselor roles.
       </p>
 
       <div class="form-check" style="margin-bottom:12px;">
@@ -1561,7 +1585,7 @@
         <div class="form-check">
           <input type="checkbox" name="tutorial_hod_enabled" id="tutorialHodEnabled" data-tutorial-role-toggle
                  {% if app_config.tutorial_hod_enabled == 'true' %}checked{% endif %}>
-          <label for="tutorialHodEnabled">HOD Tutorial</label>
+          <label for="tutorialHodEnabled">HoD Tutorial</label>
         </div>
         <div class="form-check">
           <input type="checkbox" name="tutorial_deo_enabled" id="tutorialDeoEnabled" data-tutorial-role-toggle
@@ -2698,6 +2722,37 @@ function toggleStudentQuickAdd(idx) {
     const firstInput = quickAdd.querySelector('input[name="reg_no"]');
     if (firstInput) setTimeout(() => firstInput.focus(), 100);
   }
+}
+
+function openDepartmentEdit(deptId, currentCode, currentName) {
+  const nextCodeRaw = prompt('Department code', String(currentCode || ''));
+  if (nextCodeRaw === null) return;
+
+  const nextCode = String(nextCodeRaw || '').trim().toUpperCase();
+  if (!nextCode) {
+    alert('Department code is required.');
+    return;
+  }
+
+  const nextNameRaw = prompt('Department full name', String(currentName || ''));
+  if (nextNameRaw === null) return;
+
+  const nextName = String(nextNameRaw || '').trim();
+  if (!nextName) {
+    alert('Department full name is required.');
+    return;
+  }
+
+  const form = document.getElementById(`deptEditForm-${deptId}`);
+  if (!form) return;
+
+  const codeInput = form.querySelector('input[name="code"]');
+  const nameInput = form.querySelector('input[name="name"]');
+  if (!codeInput || !nameInput) return;
+
+  codeInput.value = nextCode;
+  nameInput.value = nextName;
+  form.submit();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

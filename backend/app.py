@@ -342,6 +342,23 @@ def _is_tutorial_enabled_for_role(role, config=None):
     return bool(flags.get("master") and flags.get(role_key))
 
 
+def _format_year_level(value):
+    """Render year values as 1st Year, 2nd Year, etc."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+
+    try:
+        year = int(raw)
+    except (TypeError, ValueError):
+        return raw
+
+    suffix = "th"
+    if year % 100 not in (11, 12, 13):
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(year % 10, "th")
+    return f"{year}{suffix} Year"
+
+
 def _get_actor_scope_pairs(actor_email, actor_role):
     if _is_system_admin(actor_role):
         return None
@@ -396,7 +413,7 @@ def _build_example_scope_pairs(limit=4):
 
 
 def _get_assigned_departments_for_user(user_email, user_role):
-    """Return distinct department codes assigned to counselor/HOD/DEO users."""
+    """Return distinct department codes assigned to counselor/HoD/DEO users."""
     role_norm = str(user_role or "").strip().lower()
     email = str(user_email or "").strip()
     if not email:
@@ -474,13 +491,13 @@ def _can_chief_admin_touch_user(actor_email, target_user):
     
     target_role = target_user.get("role")
     
-    # HOD can manage counselors/DEOs in their scope.
+    # HoD can manage counselors/DEOs in their scope.
     if target_role in {"counselor", "deo"}:
         scopes = _get_actor_scope_pairs(actor_email, "hod") or set()
         key = (str(target_user.get("department") or "").upper(), int(target_user.get("year_level") or 1))
         return key in scopes
     
-    # HOD can manage other HOD accounts only with scope overlap.
+    # HoD can manage other HoD accounts only with scope overlap.
     if target_role in {"chief_admin", "hod"}:
         actor_scopes = _get_actor_scope_pairs(actor_email, "hod") or set()
         target_scopes = db.get_chief_admin_scopes(target_user.get("email"))
@@ -897,6 +914,7 @@ def inject_globals():
         "password_reset_otp_for_user": bool(password_reset_otp_for_user),
         "login_otp_for_user": bool(login_otp_for_user),
         "is_default_admin_user": bool(is_default_admin_user),
+        "format_year_level": _format_year_level,
         "smtp_status": smtp_status,
         "now": datetime.now(),
     }
@@ -929,8 +947,8 @@ def instructions_page():
     role_titles = {
         "admin": "System Admin",
         "principal": "Principal",
-        "hod": "HOD",
-        "chief_admin": "HOD",
+        "hod": "HoD",
+        "chief_admin": "HoD",
         "deo": "DEO",
         "counselor": "Counselor",
     }
@@ -1190,13 +1208,13 @@ def login():
         user = db.authenticate_user(identifier, password)
         if not user:
             flash("Invalid email/name or password.", "error")
-            return render_template("login.html")
+            return render_template("login.html", login_identifier=identifier)
 
         email = user["email"]
         allowed, msg = db.check_user_access(email)
         if not allowed:
             flash(msg, "error")
-            return render_template("login.html")
+            return render_template("login.html", login_identifier=identifier)
 
         # Check for existing active session on another device
         if not force_logout:
@@ -1217,7 +1235,7 @@ def login():
             otp_code = generate_otp(6)
             if not _send_otp_email(email, otp_code, "Login"):
                 flash("OTP delivery failed. Verify SMTP settings and try again.", "error")
-                return render_template("login.html")
+                return render_template("login.html", login_identifier=identifier)
 
             session["pending_login_otp"] = {
                 "email": email,
@@ -1717,8 +1735,11 @@ def _render_admin_panel(actor_email, actor_role, preview_mode=False, forced_scop
     dashboard_data = _build_admin_dashboard_data(actor_email, actor_role, activity, departments)
     leaderboard = sorted(
         [a for a in activity if int(a.get("student_count") or 0) > 0],
-        key=lambda r: (float((int(r.get("unique_students_messaged") or 0) / max(1, int(r.get("student_count") or 1))) * 100), int(r.get("week_messages") or 0)),
-        reverse=True,
+        key=lambda r: (
+            -float((int(r.get("unique_students_messaged") or 0) / max(1, int(r.get("student_count") or 1))) * 100),
+            int(r.get("best_completion_seconds") or 10**9),
+            -int(r.get("total_messages") or 0),
+        ),
     )[:10]
     students_map = {c["email"]: db.get_students(c["email"]) for c in counselors}
     return render_template(
@@ -2432,7 +2453,7 @@ def api_create_user():
     year_level = request.form.get("year_level", type=int) or 1
 
     if _is_hod(actor_role) and role not in {"counselor", "deo"}:
-        flash("HOD can create only counselor or DEO accounts.", "error")
+        flash("HoD can create only counselor or DEO accounts.", "error")
         return _redirect_admin_back("users")
 
     if _is_deo(actor_role) and role != "counselor":
@@ -2466,7 +2487,7 @@ def api_create_user():
                 scope_pairs = [(fallback_dep, fallback_year)]
 
         if not scope_pairs:
-            flash("Assign at least one department/year scope for HOD/DEO accounts.", "error")
+            flash("Assign at least one department/year scope for HoD/DEO accounts.", "error")
             return _redirect_admin_back("users")
 
         if _is_hod(actor_role):
@@ -2651,7 +2672,7 @@ def api_update_user(email):
                     requested_scope_pairs = [(fallback_dep, fallback_year)]
 
             if not requested_scope_pairs:
-                flash("Assign at least one department/year scope for HOD/DEO accounts.", "error")
+                flash("Assign at least one department/year scope for HoD/DEO accounts.", "error")
                 return _redirect_admin_back("users")
 
             department, year_level = requested_scope_pairs[0]
@@ -3005,12 +3026,12 @@ def api_admin_reset_password():
 @login_required
 @admin_required
 def api_chief_admin_reset_password():
-    """HOD can reset password for counselors/DEOs in their assigned dept/year scope."""
+    """HoD can reset password for counselors/DEOs in their assigned dept/year scope."""
     actor_email = session.get("user_email")
     actor_role = session.get("role")
     
     if not _is_hod(actor_role):
-        flash("Only HOD users can access this function.", "error")
+        flash("Only HoD users can access this function.", "error")
         return redirect(url_for("counselor_page"))
     
     target_email = request.form.get("target_email", "").strip()
@@ -3039,7 +3060,7 @@ def api_chief_admin_reset_password():
         flash("You can reset passwords only for counselors or DEOs.", "error")
         return redirect(url_for("counselor_page"))
 
-    # HOD must be able to manage this target's department/year
+    # HoD must be able to manage this target's department/year
     if not _can_chief_admin_touch_user(actor_email, target):
         flash("You can reset passwords only for users in your assigned scope.", "error")
         return redirect(url_for("counselor_page"))
@@ -3058,14 +3079,14 @@ def api_chief_admin_reset_password():
 @login_required
 @admin_required
 def api_chief_admin_get_scoped_counselors():
-    """Return list of counselors/DEOs under HOD's dept/year scope as JSON."""
+    """Return list of counselors/DEOs under HoD's dept/year scope as JSON."""
     actor_email = session.get("user_email")
     actor_role = session.get("role")
     
     if not _is_hod(actor_role):
         return jsonify({"error": "Unauthorized"}), 403
     
-    # Get all users scoped to this HOD
+    # Get all users scoped to this HoD
     all_scoped_users = db.get_scoped_users_for_admin(actor_email, actor_role) or []
     
     # Filter to counselors + DEOs
@@ -3235,6 +3256,25 @@ def api_delete_department(dept_id):
         return _redirect_admin_back("departments")
     db.delete_department(dept_id)
     flash("Department deleted.", "success")
+    return _redirect_admin_back("departments")
+
+
+@app.route("/api/departments/<int:dept_id>/update", methods=["POST"])
+@login_required
+@admin_required
+def api_update_department(dept_id):
+    if not _is_system_admin(session.get("role")):
+        flash("Only system admin can edit departments.", "error")
+        return _redirect_admin_back("departments")
+
+    code = request.form.get("code", "").strip().upper()
+    name = request.form.get("name", "").strip()
+    if not code or not name:
+        flash("Department code and full name are required.", "error")
+        return _redirect_admin_back("departments")
+
+    ok, msg = db.update_department_identity(dept_id, code, name)
+    flash(msg, "success" if ok else "error")
     return _redirect_admin_back("departments")
 
 

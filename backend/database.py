@@ -15,6 +15,8 @@ from config import DATABASE_FILE, DATA_DIR, DEFAULT_DEPARTMENTS, DEFAULT_ADMIN
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
+TIME_SCORE_STEP_SECONDS = 5
+
 
 def get_conn():
     """Get a database connection with row_factory."""
@@ -219,6 +221,15 @@ def init_database():
         FOREIGN KEY (counselor_email) REFERENCES users(email),
         FOREIGN KEY (test_id) REFERENCES tests(id),
         UNIQUE(counselor_email, test_id, reg_no, subject_name)
+    )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS counselor_time_scores (
+        counselor_email TEXT PRIMARY KEY,
+        score_seconds INTEGER DEFAULT 0,
+        best_completion_seconds INTEGER,
+        last_event_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (counselor_email) REFERENCES users(email)
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -453,14 +464,14 @@ def get_scoped_users_for_admin(actor_email, actor_role):
                 filtered.append(d)
             continue
 
-        # HOD can see counselors/DEOs in allowed scopes.
+        # HoD can see counselors/DEOs in allowed scopes.
         if d.get("role") in {"counselor", "deo"}:
             key = (str(d.get("department") or "").strip().upper(), int(d.get("year_level") or 1))
             if key in allowed:
                 filtered.append(d)
             continue
         
-        # Include HODs if they have ANY scope overlap.
+        # Include HoDs if they have ANY scope overlap.
         if d.get("role") in {"chief_admin", "hod"}:
             other_scopes = get_chief_admin_scopes(d.get("email"))
             other_allowed = {(s["department"], int(s["year_level"])) for s in other_scopes}
@@ -507,7 +518,7 @@ def delete_user(email):
     """Delete a user and all dependent rows that have FK references to users(email)."""
     conn = get_conn()
     try:
-        # Remove scoped-admin mappings first (HOD/DEO accounts).
+        # Remove scoped-admin mappings first (HoD/DEO accounts).
         conn.execute("DELETE FROM chief_admin_scopes WHERE chief_admin_email=?", (email,))
 
         # Remove counselor-linked entities.
@@ -1323,6 +1334,55 @@ def update_department(dept_id, **kwargs):
     conn.close()
 
 
+def update_department_identity(dept_id, code, name):
+    """Update department code/name and propagate code changes to dependent tables."""
+    dept_code = str(code or "").strip().upper()
+    dept_name = str(name or "").strip()
+    if not dept_code or not dept_name:
+        return False, "Department code and full name are required"
+
+    conn = get_conn()
+    try:
+        row = conn.execute("SELECT code FROM departments WHERE id=?", (dept_id,)).fetchone()
+        if not row:
+            return False, "Department not found"
+
+        old_code = str(row["code"] or "").strip().upper()
+        clash = conn.execute(
+            "SELECT id FROM departments WHERE UPPER(code)=? AND id<>?",
+            (dept_code, dept_id),
+        ).fetchone()
+        if clash:
+            return False, "Department code already exists"
+
+        conn.execute(
+            "UPDATE departments SET code=?, name=? WHERE id=?",
+            (dept_code, dept_name, dept_id),
+        )
+
+        if old_code and old_code != dept_code:
+            tables = (
+                "users",
+                "chief_admin_scopes",
+                "counselor_students",
+                "test_metadata",
+                "student_marks",
+            )
+            for table_name in tables:
+                conn.execute(
+                    f"UPDATE {table_name} SET department=? WHERE UPPER(COALESCE(department,''))=?",
+                    (dept_code, old_code),
+                )
+
+        conn.commit()
+        return True, "Department updated"
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return False, "Department update failed due to conflicting scoped mappings"
+    finally:
+        conn.close()
+
+
 def delete_department(dept_id):
     conn = get_conn()
     conn.execute("DELETE FROM departments WHERE id=?", (dept_id,))
@@ -1853,6 +1913,85 @@ def upsert_counselor_mark_override(counselor_email, test_id, reg_no, subject_nam
 # MESSAGES
 # =========================================================================
 
+def _parse_db_timestamp(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        return datetime.fromisoformat(raw)
+    except ValueError:
+        try:
+            return datetime.strptime(raw, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+
+
+def _decay_time_score(score_seconds, last_event_at, reference_dt=None):
+    score = max(0, int(score_seconds or 0))
+    event_dt = _parse_db_timestamp(last_event_at)
+    if not event_dt:
+        return score
+
+    now_dt = reference_dt or datetime.now()
+    elapsed = max(0, int((now_dt - event_dt).total_seconds()))
+    decay = (elapsed // TIME_SCORE_STEP_SECONDS) * TIME_SCORE_STEP_SECONDS
+    return max(0, score - decay)
+
+
+def _format_time_score(seconds_value):
+    total = max(0, int(seconds_value or 0))
+    minutes, seconds = divmod(total, 60)
+    return f"{minutes:02d}:{seconds:02d}"
+
+
+def _upsert_counselor_time_score_after_message(conn, counselor_email):
+    now_dt = datetime.now()
+    now_sql = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    row = conn.execute(
+        "SELECT score_seconds, best_completion_seconds, last_event_at FROM counselor_time_scores WHERE counselor_email=?",
+        (counselor_email,),
+    ).fetchone()
+
+    best_seconds = None
+    if row:
+        best_raw = row["best_completion_seconds"]
+        best_seconds = int(best_raw) if best_raw is not None else None
+        decayed = _decay_time_score(row["score_seconds"], row["last_event_at"], now_dt)
+        new_score = decayed + TIME_SCORE_STEP_SECONDS
+        conn.execute(
+            "UPDATE counselor_time_scores SET score_seconds=?, last_event_at=?, updated_at=? WHERE counselor_email=?",
+            (new_score, now_sql, now_sql, counselor_email),
+        )
+    else:
+        new_score = TIME_SCORE_STEP_SECONDS
+        conn.execute(
+            "INSERT INTO counselor_time_scores (counselor_email, score_seconds, best_completion_seconds, last_event_at, updated_at) VALUES (?,?,?,?,?)",
+            (counselor_email, new_score, None, now_sql, now_sql),
+        )
+
+    student_count = conn.execute(
+        "SELECT COUNT(*) FROM counselor_students WHERE counselor_email=?",
+        (counselor_email,),
+    ).fetchone()[0]
+    unique_messaged = conn.execute(
+        "SELECT COUNT(DISTINCT reg_no) FROM sent_messages WHERE counselor_email=?",
+        (counselor_email,),
+    ).fetchone()[0]
+
+    if student_count > 0 and unique_messaged >= student_count:
+        if best_seconds is None or new_score < best_seconds:
+            best_seconds = new_score
+            conn.execute(
+                "UPDATE counselor_time_scores SET best_completion_seconds=?, updated_at=? WHERE counselor_email=?",
+                (best_seconds, now_sql, counselor_email),
+            )
+
+    return {
+        "score_seconds": int(new_score),
+        "best_completion_seconds": best_seconds,
+    }
+
 def log_message(counselor_email, reg_no, student_name, message, fmt="message",
                      whatsapp_link=None, session_id=None, test_id=None):
     conn = get_conn()
@@ -1860,6 +1999,7 @@ def log_message(counselor_email, reg_no, student_name, message, fmt="message",
                           (counselor_email, test_id, reg_no, student_name, message, format, whatsapp_link, session_id)
                           VALUES (?,?,?,?,?,?,?,?)""",
                       (counselor_email, test_id, reg_no, student_name, message, fmt, whatsapp_link, session_id))
+    _upsert_counselor_time_score_after_message(conn, counselor_email)
     conn.commit()
     conn.close()
 
@@ -2516,6 +2656,22 @@ def get_counselor_activity_summary():
         ).fetchone()
         last_message_at = last_msg_row["last_sent"] if last_msg_row else None
 
+        time_row = conn.execute(
+            "SELECT score_seconds, best_completion_seconds, last_event_at FROM counselor_time_scores WHERE counselor_email=?",
+            (email,),
+        ).fetchone()
+        time_score_seconds = 0
+        best_completion_seconds = None
+        if time_row:
+            time_score_seconds = _decay_time_score(time_row["score_seconds"], time_row["last_event_at"])
+            best_raw = time_row["best_completion_seconds"]
+            best_completion_seconds = int(best_raw) if best_raw is not None else None
+
+        time_score_display = _format_time_score(time_score_seconds)
+        best_time_display = _format_time_score(best_completion_seconds) if best_completion_seconds is not None else "--"
+        if best_time_display != "--":
+            time_score_display = f"{time_score_display} (Best {best_time_display})"
+
         # Determine work status
         has_students = student_count > 0
         has_tests = tests_uploaded > 0
@@ -2543,6 +2699,11 @@ def get_counselor_activity_summary():
             "total_messages": total_messages,
             "week_messages": week_messages,
             "unique_students_messaged": unique_messaged,
+            "time_score_seconds": int(time_score_seconds or 0),
+            "time_score": _format_time_score(time_score_seconds),
+            "best_completion_seconds": best_completion_seconds,
+            "best_time_score": best_time_display,
+            "time_score_display": time_score_display,
             "last_message_at": last_message_at,
             "work_status": work_status,
         })

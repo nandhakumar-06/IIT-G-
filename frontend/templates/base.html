@@ -166,7 +166,7 @@
         <div class="user-avatar">{{ current_user_name[0] if current_user_name else '?' }}</div>
         <div class="user-details">
           <span class="user-name">{{ current_user_name }}</span>
-          <span class="user-role">{% if effective_role in ['chief_admin', 'hod'] %}HOD{% elif effective_role == 'deo' %}DEO{% elif effective_role == 'admin' %}ADMIN{% elif effective_role == 'principal' %}PRINCIPAL{% elif effective_role == 'counselor' %}COUNSELOR{% else %}{{ effective_role|upper }}{% endif %}</span>
+          <span class="user-role">{% if effective_role in ['chief_admin', 'hod'] %}HoD{% elif effective_role == 'deo' %}DEO{% elif effective_role == 'admin' %}ADMIN{% elif effective_role == 'principal' %}PRINCIPAL{% elif effective_role == 'counselor' %}COUNSELOR{% else %}{{ effective_role|upper }}{% endif %}</span>
           {% if assigned_departments and effective_role in ['chief_admin', 'hod', 'deo', 'counselor'] %}
           <div class="user-department-list">
             {% for dep in assigned_departments %}
