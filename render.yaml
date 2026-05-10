@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: iit-g
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python backend/app.py
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
