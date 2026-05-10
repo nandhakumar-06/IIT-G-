@@ -1,5 +1,5 @@
 # migrate_db.py
-"""Schema migration bootstrap for the current RMKCET database model."""
+"""Schema migration bootstrap for the current IIT-G database model."""
 
 import os
 import sqlite3

@@ -15,7 +15,7 @@ def generate_student_pdf(student_name, reg_no, department, subjects_marks,
 
     # Header
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 12, "RMKCET", 0, 1, "C")
+    pdf.cell(0, 12, "IIT-G", 0, 1, "C")
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 8, "Academic Progress Report", 0, 1, "C")
     pdf.set_font("Arial", "I", 10)

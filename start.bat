@@ -1,9 +1,9 @@
 @echo off
-title RMKCET Parent Connect
+title IIT-G Parent Connect
 color 0A
 echo.
 echo  ============================================
-echo   RMKCET Parent Connect
+echo   IIT-G Parent Connect
 echo   Starting server...
 echo  ============================================
 echo.

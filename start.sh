@@ -153,7 +153,7 @@ fi
 
 echo
 echo "============================================"
-echo " RMKCET Parent Connect"
+echo " IIT-G Parent Connect"
 echo " Starting server..."
 echo "============================================"
 echo

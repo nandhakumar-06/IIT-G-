@@ -19,7 +19,7 @@ def make_pdf(path: Path, title: str, audience: str, sections: list[tuple[str, li
     pdf.set_text_color(30, 30, 30)
     pdf.set_font("Helvetica", "", 11)
     pdf.set_xy(12, 34)
-    pdf.multi_cell(0, 7, f"Program documentation for {audience}. RMKCET Parent Connect workflow guide.")
+    pdf.multi_cell(0, 7, f"Program documentation for {audience}. IIT-G Parent Connect workflow guide.")
 
     for section_title, bullets in sections:
         pdf.ln(2)
@@ -76,7 +76,7 @@ def main():
 
     docs = {
         "doc_admin.pdf": (
-            "RMKCET Parent Connect - Admin Documentation",
+            "IIT-G Parent Connect - Admin Documentation",
             "System Admin",
             [
                 ("Core Responsibilities", [
@@ -97,7 +97,7 @@ def main():
             ],
         ),
         "doc_chief_admin.pdf": (
-            "RMKCET Parent Connect - Chief Admin Documentation",
+            "IIT-G Parent Connect - Chief Admin Documentation",
             "Chief Admin",
             [
                 ("Scope-Based Controls", [
@@ -118,7 +118,7 @@ def main():
             ],
         ),
         "doc_counsellor.pdf": (
-            "RMKCET Parent Connect - Counselor Documentation",
+            "IIT-G Parent Connect - Counselor Documentation",
             "Counselor",
             [
                 ("Message Sending Flow", [

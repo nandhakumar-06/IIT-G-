@@ -1,5 +1,5 @@
 /* ============================================================
-   RMKCET Parent Connect – Global Styles
+   IIT-G Parent Connect – Global Styles
    Dark glass-morphism theme
    ============================================================ */
 
@@ -161,7 +161,7 @@ a:hover { color: var(--accent); }
   height: 130px;
   min-height: 130px;
   max-height: 130px;
-  background-image: url('../assets/shine-logo.png');
+  background-image: url('../assets/Mark Sender-logo.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;

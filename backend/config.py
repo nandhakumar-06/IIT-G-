@@ -16,10 +16,10 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(ASSETS_DIR, exist_ok=True)
 
 # === Database ===
-DATABASE_FILE = os.path.join(DATA_DIR, "rmkcet.db")
+DATABASE_FILE = os.path.join(DATA_DIR, "IIT-G.db")
 
 # === Application ===
-APP_NAME = "RMKCET SHINE"
+APP_NAME = "IIT-G Mark Sender"
 APP_VERSION = "5.0"
 APP_ICON = "🎓"
 SESSION_TIMEOUT = 86400  # 24 hours
@@ -65,12 +65,12 @@ SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "RMKCET Parent Connect <noreply@rmkcet.ac.in>")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "IIT-G Parent Connect <noreply@IIT-G.ac.in>")
 
 # === Security ===
 OTP_EXPIRY_SECONDS = 300
 PASSWORD_RESET_TOKEN_EXPIRY = 3600
-ALLOWED_EMAIL_DOMAINS = ["rmkcet.ac.in", "rmkec.ac.in", "gmail.com"]
+ALLOWED_EMAIL_DOMAINS = ["IIT-G.ac.in", "rmkec.ac.in", "gmail.com"]
 
 # === WhatsApp ===
 COUNTRY_CODE = os.getenv("COUNTRY_CODE", "91")
@@ -98,12 +98,12 @@ NAME : {student_name}
 
 Regards
 PRINCIPAL
-RMKCET
+IIT-G
 """
 
 # === Default Admin ===
 DEFAULT_ADMIN = {
-    "email": "admin@rmkcet.ac.in",
+    "email": "admin@IIT-G.ac.in",
     "password": "Admin@123",
     "name": "System Administrator"
 }

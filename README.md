@@ -1,11 +1,11 @@
-# RMKCET Parent Connect
+# IIT-G Parent Connect
 
-A web-based system for managing student-parent communication at RMKCET. Counselors can upload student data, manage test marks, and generate progress reports to send to parents via WhatsApp.
+A web-based system for managing student-parent communication at IIT-G. Counselors can upload student data, manage test marks, and generate progress reports to send to parents via WhatsApp.
 
 ## Project Structure
 
 ```
-rmkcet-parent-connect/
+IIT-G-parent-connect/
 ├── backend/                 # Flask backend application
 │   ├── app.py              # Main Flask application
 │   ├── database.py         # Database operations (SQLite)
@@ -62,8 +62,8 @@ rmkcet-parent-connect/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/rmkcet-parent-connect.git
-   cd rmkcet-parent-connect
+   git clone https://github.com/YOUR_USERNAME/IIT-G-parent-connect.git
+   cd IIT-G-parent-connect
    ```
 
 2. **Create virtual environment**
@@ -93,7 +93,7 @@ rmkcet-parent-connect/
 
 ## Default Login
 
-- **Email**: admin@rmkcet.ac.in
+- **Email**: admin@IIT-G.ac.in
 - **Password**: Admin@123
 
 ## Environment Variables
@@ -109,4 +109,4 @@ SMTP_PASSWORD=your-app-password
 
 ## License
 
-This project is for educational purposes at RMKCET.
+This project is for educational purposes at IIT-G.

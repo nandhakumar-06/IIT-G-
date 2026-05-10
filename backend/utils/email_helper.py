@@ -38,7 +38,7 @@ def send_email(to_email: str, subject: str, body: str, html: bool = False) -> bo
 
 def send_password_reset_email(to_email: str, token: str) -> bool:
     """Send password reset email with token."""
-    subject = "RMKCET Parent Connect - Password Reset"
+    subject = "IIT-G Parent Connect - Password Reset"
     body = f"""
     <h2>Password Reset Request</h2>
     <p>Your password reset token is:</p>
@@ -46,6 +46,6 @@ def send_password_reset_email(to_email: str, token: str) -> bool:
     <p>This token expires in 1 hour.</p>
     <p>If you did not request this, please ignore this email.</p>
     <br>
-    <p>— RMKCET Parent Connect</p>
+    <p>— IIT-G Parent Connect</p>
     """
     return send_email(to_email, subject, body, html=True)

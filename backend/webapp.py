@@ -1,4 +1,4 @@
-# webapp.py - Flask Web Application for RMKCET Parent Connect
+# webapp.py - Flask Web Application for IIT-G Parent Connect
 """
 Complete Flask web application replacing the Streamlit UI.
 Serves HTML templates with a dark glass-morphism theme.
@@ -448,7 +448,7 @@ def api_export_activity_pdf():
     pdf = FPDF("L")
     pdf.add_page()
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 12, "RMKCET Parent Connect - Counselor Activity", 0, 1, "C")
+    pdf.cell(0, 12, "IIT-G Parent Connect - Counselor Activity", 0, 1, "C")
     pdf.set_font("Arial", "I", 10)
     pdf.cell(0, 8, f"Generated: {datetime.now().strftime('%d-%b-%Y %H:%M')}", 0, 1, "C")
     pdf.ln(4)
@@ -700,5 +700,5 @@ if __name__ == "__main__":
 
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
     print("\n  [INFO] webapp.py is legacy. Delegating launch to backend/app.py\n")
-    print(f"  ✅  RMKCET Parent Connect running at: http://localhost:{port}\n")
+    print(f"  ✅  IIT-G Parent Connect running at: http://localhost:{port}\n")
     canonical_app.run(debug=False, host="0.0.0.0", port=port, use_reloader=False)

@@ -1,4 +1,4 @@
-# webapp.py - Flask Web Application for RMKCET Parent Connect
+# webapp.py - Flask Web Application for IIT-G Parent Connect
 """
 Complete Flask web application replacing the Streamlit UI.
 Serves HTML templates with a dark glass-morphism theme.
@@ -216,14 +216,14 @@ def _is_password_reset_otp_required_for_user(role, email):
 
 
 def _send_otp_email(target_email, otp_code, purpose):
-    subject = f"RMKCET SHINE - {purpose} OTP"
+    subject = f"IIT-G Mark Sender - {purpose} OTP"
     body = (
         f"<h3>{purpose} verification</h3>"
         f"<p>Your one-time password is:</p>"
         f"<h2 style='letter-spacing:4px;color:#2563eb'>{otp_code}</h2>"
         f"<p>This OTP is valid for {max(1, int(OTP_EXPIRY_SECONDS // 60))} minutes.</p>"
         f"<p>If you did not initiate this request, you can ignore this mail.</p>"
-        f"<p>RMKCET SHINE</p>"
+        f"<p>IIT-G Mark Sender</p>"
     )
     return send_email(target_email, subject, body, html=True)
 
@@ -1135,7 +1135,7 @@ def _build_parent_message(test_name, reg_no, student_name, marks):
         f"{marks_table}\n\n"
         f"Regards\n"
         f"PRINCIPAL\n"
-        f"RMKCET"
+        f"IIT-G"
     )
 
 
@@ -1811,7 +1811,7 @@ def _perform_database_backup(batch_name, overwrite=False):
     backup_dir = os.path.join(DATA_DIR, "backups")
     os.makedirs(backup_dir, exist_ok=True)
     safe_batch = re.sub(r"[^0-9A-Za-z_-]", "_", str(batch_name or "batch"))
-    target = os.path.join(backup_dir, f"rmkcet_shine_{safe_batch}.db")
+    target = os.path.join(backup_dir, f"IIT-G_Mark Sender_{safe_batch}.db")
     if os.path.exists(target) and not overwrite:
         raise ValueError("Backup for this batch already exists. Enable overwrite to replace it.")
     shutil.copy2(DATABASE_FILE, target)
@@ -2111,7 +2111,7 @@ def api_export_messages_pdf():
     pdf = FPDF("L")
     pdf.add_page()
     pdf.set_font("Arial", "B", 15)
-    pdf.cell(0, 10, "RMKCET Parent Connect - Message Activity", 0, 1, "C")
+    pdf.cell(0, 10, "IIT-G Parent Connect - Message Activity", 0, 1, "C")
     pdf.set_font("Arial", "", 9)
     subtitle = f"Day: {msg_day or 'All'}   Counselor Search: {msg_q or 'All'}   Generated: {datetime.now().strftime('%d-%b-%Y %H:%M')}"
     pdf.cell(0, 8, subtitle[:150], 0, 1, "C")
@@ -2166,7 +2166,7 @@ def counselor_page():
         dep = example_scope_pairs[0][0] if example_scope_pairs else ""
         yr = example_scope_pairs[0][1] if example_scope_pairs else 1
         user = {
-            "email": "preview.counselor@rmkcet.local",
+            "email": "preview.counselor@IIT-G.local",
             "name": "Example Counselor",
             "role": "counselor",
             "department": dep,
@@ -3473,12 +3473,12 @@ def api_config_smtp_test():
         return _redirect_admin_back("config")
 
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    subject = "RMKCET SHINE SMTP Test"
+    subject = "IIT-G Mark Sender SMTP Test"
     body = (
         "<h3>SMTP Test Successful</h3>"
         f"<p>Timestamp: {stamp}</p>"
         f"<p>Server: {SMTP_SERVER}:{SMTP_PORT}</p>"
-        "<p>This is a verification mail from RMKCET SHINE.</p>"
+        "<p>This is a verification mail from IIT-G Mark Sender.</p>"
     )
     if send_email(target_email, subject, body, html=True):
         flash(f"SMTP test email sent to {_mask_email(target_email)}.", "success")
@@ -3606,7 +3606,7 @@ def api_export_activity_pdf():
     pdf = FPDF("L")
     pdf.add_page()
     pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 12, "RMKCET Parent Connect - Counselor Activity", 0, 1, "C")
+    pdf.cell(0, 12, "IIT-G Parent Connect - Counselor Activity", 0, 1, "C")
     pdf.set_font("helvetica", "I", 10)
     pdf.cell(0, 8, f"Generated: {datetime.now().strftime('%d-%b-%Y %H:%M')}", 0, 1, "C")
     pdf.ln(4)
@@ -3684,12 +3684,12 @@ def api_export_activity_filtered_pdf():
     pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
 
-    logo_path = os.path.join(FRONTEND_DIR, "static", "assets", "shine-logo.png")
+    logo_path = os.path.join(FRONTEND_DIR, "static", "assets", "Mark Sender-logo.png")
     if os.path.isfile(logo_path):
         pdf.image(logo_path, x=10, y=8, w=18)
 
     pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 10, "RMKCET SHINE", align="C")
+    pdf.cell(0, 10, "IIT-G Mark Sender", align="C")
     pdf.ln()
     pdf.set_font("helvetica", "B", 11)
     pdf.cell(
@@ -4574,7 +4574,7 @@ def api_send_single_report():
         "{subjects_table}\n\n"
         "Regards\n"
         "PRINCIPAL\n"
-        "RMKCET"
+        "IIT-G"
     )
 
     marks_table = _build_parent_subjects_table(marks, ordered_fields=ordered_fields)

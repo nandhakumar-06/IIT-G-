@@ -68,7 +68,7 @@ def generate_report_image(student_name: str, reg_no: str, department: str,
                            outline=PRIMARY, width=2)
 
     # Title
-    draw.text((40, y + 10), "RMKCET", fill=PRIMARY, font=font_title)
+    draw.text((40, y + 10), "IIT-G", fill=PRIMARY, font=font_title)
     draw.text((40, y + 45), "Academic Progress Report", fill=GREY, font=font_subtitle)
     draw.text((width - 200, y + 15), test_name, fill=WHITE, font=font_subtitle)
     draw.text((width - 200, y + 40), datetime.now().strftime("%d %b %Y"), fill=GREY, font=font_small)
