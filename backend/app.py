@@ -4855,7 +4855,7 @@ def serve_data(filename):
 # Run
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
-    print(f"\n  ✅  RMKCET Parent Connect running at: http://localhost:{port}\n")
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    print(f"\n  ✅  IIT-G Parent Connect running at: http://localhost:{port}\n")
     app.run(debug=False, host="0.0.0.0", port=port, use_reloader=False)
